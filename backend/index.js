@@ -8,6 +8,8 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+const PORT = process.env.PORT || 3000;
+
 app.get("/", async (req, res) => {
   try {
     res.status(200).send({ msg: "Welcome to Alphabin-Weather-App" });
@@ -32,6 +34,6 @@ app.get("/weather", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
+app.listen(PORT, () => {
   console.log(`Server is started at http://localhost:3000`);
 });
