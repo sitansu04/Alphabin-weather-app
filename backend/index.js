@@ -19,20 +19,20 @@ app.get("/", async (req, res) => {
   }
 });
 
-app.get("/weather", async (req, res) => {
-  try {
-    const city = req.query.city;
-    const apiKey = process.env.API_KEY;
-    const data = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
-    );
-    const out = await data.json();
-    res.status(201).json(out);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({ error: error.message });
-  }
-});
+// app.get("/weather", async (req, res) => {
+//   try {
+//     const city = req.query.city;
+//     const apiKey = process.env.API_KEY;
+//     const data = await fetch(
+//       `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
+//     );
+//     const out = await data.json();
+//     res.status(201).json(out);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({ error: error.message });
+//   }
+// });
 
 app.listen(PORT, () => {
   console.log(`Server is started at http://localhost:3000`);
