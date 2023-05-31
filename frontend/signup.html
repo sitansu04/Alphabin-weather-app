@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./styles/signup.css" />
+    <title>Signup</title>
+  </head>
+  <body>
+    <section class="login-container">
+      <article class="form-container">
+        <div class="intro">
+          <h1>Register Here</h1>
+          <p>Please Enter Your details</p>
+        </div>
+
+        <form onsubmit="return false;" class="form">
+          <div class="email-input">
+            <div class="input-container">
+              <p class="sub-title">Email Address</p>
+              <input type="email" name="usermail" id="email" />
+            </div>
+          </div>
+
+          <div class="email-input">
+            <div class="input-container">
+              <p class="sub-title">Password</p>
+              <input type="password" name="userpass" id="password" />
+            </div>
+          </div>
+
+          <button id="submit">Continue</button>
+        </form>
+
+        <article class="outro">
+          <div class="ending">
+            <p>if you registered yourself please login here</p>
+            <a id="login" href="./index.html">Login</a>
+          </div>
+        </article>
+      </article>
+      <article class="login-side-bg"></article>
+    </section>
+  </body>
+</html>
+<script src="./scripts/signup.js"></script>
+<script
+  src="https://kit.fontawesome.com/a7c1ce01b0.js"
+  crossorigin="anonymous"
+></script>

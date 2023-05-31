@@ -3,17 +3,16 @@ require("dotenv").config();
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const cors = require("cors");
-const geoip = require("geoip-lite");
-const unirest = require("unirest");
 const { connection } = require("./config/db");
 const { Citymodel } = require("./models/city.model");
 const { limiter } = require("./middlewares/ratelimiter.middleware");
-const { ipSave } = require("./middlewares/ip.middleware");
+const { userRouter } = require("./routes/user.routes");
+const { authenticate } = require("./middlewares/authentication.middleaware");
 const app = express();
 
 app.use(express.json());
 app.use(cors());
-app.set("trust proxy", true);
+app.use("/user", userRouter);
 
 const PORT = process.env.PORT || 3000;
 
@@ -46,7 +45,7 @@ app.get("/forecast", async (req, res) => {
     const city = req.query.city;
     const apiKey = process.env.API_KEY;
     const data = await fetch(
-      `https://api.weatherbit.io/v2.0/forecast/daily?city=${city}&key=${apiKey}`
+      `https://api.weatherbit.io/v2.0/forecast/daily?days=7&city=${city}&key=${apiKey}`
     );
     const out = await data.json();
     return res.status(201).json(out);
@@ -56,21 +55,27 @@ app.get("/forecast", async (req, res) => {
   }
 });
 
-app.post("/save", ipSave, async (req, res) => {
+app.post("/save", authenticate, async (req, res) => {
   try {
-    const payload = req.body;
-    const ip = req.body.ip;
-
+    const name = req.body.name;
+    const currentTemp = req.body.currentTemp;
+    const userID = req.body.userID;
+    const pref = req.body.pref;
     const ex_city = await Citymodel.find({
-      $and: [{ name: payload.name.toLowerCase() }, { ip: ip }],
+      $and: [{ name: name }, { user: userID }],
     });
 
+    // let cities = await Citymodel.find({ user: userID });
+    // if (cities.length > 6) {
+    //   return res.status(400).send({ msg: "please delete one of the city" });
+    // }
+
     if (ex_city.length == 0) {
-      const new_city = new Citymodel(payload);
+      const new_city = new Citymodel({ name, currentTemp, pref, user: userID });
       await new_city.save();
-      return res.status(201).send({ msg: `${payload.name} is saved` });
+      return res.status(201).send({ msg: `city is saved` });
     } else {
-      return res.status(400).send({ msg: `${payload.name} already exists` });
+      return res.status(400).send({ msg: `city already exists` });
     }
   } catch (error) {
     console.log(error);
@@ -78,13 +83,10 @@ app.post("/save", ipSave, async (req, res) => {
   }
 });
 
-app.delete("/delete/:id", ipSave, async (req, res) => {
+app.delete("/delete/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const ip = req.body.ip;
-    const city = await Citymodel.find({
-      $and: [{ _id: id }, { ip: ip }],
-    });
+    const city = await Citymodel.find({ _id: id });
     if (city.length > 0) {
       await Citymodel.findByIdAndDelete({ _id: id });
       return res.status(200).send({ msg: "City deleted successfully" });
@@ -97,37 +99,16 @@ app.delete("/delete/:id", ipSave, async (req, res) => {
   }
 });
 
-// app.get("/currLocation", async (req, res) => {
-//   try {
-//     let lat, lon;
-//     const apiCall = unirest(
-//       "GET",
-//       "https://ip-geolocation-ipwhois-io.p.rapidapi.com/json/"
-//     );
-//     apiCall.headers({
-//       "x-rapidapi-host": "ip-geolocation-ipwhois-io.p.rapidapi.com",
-//       "x-rapidapi-key": "a8e7d82e4dmsh53e8c803f3e5ebep122fb5jsnc150bf37d498",
-//     });
-//     apiCall.end(function (result) {
-//       if (res.error) throw new Error(result.error);
-//       console.log(result.body);
-//       lat = result.latitude;
-//       lon = result.longitude;
-//       res.send({ lat: lat, lon: lon });
-//     });
-//     // const geo = geoip.lookup(ip);
-//     // const city = geo.city;
-//     // const apiKey = process.env.API_KEY;
-//     // const data = await fetch(
-//     //   `https://api.weatherbit.io/v2.0/current?lat=${lat}&lon=${lon}&key=${apiKey}`
-//     // );
-//     // const out = await data.json();
-//     // return res.status(201).json(out);
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).send({ error: error.message });
-//   }
-// });
+app.get("/savedCity", authenticate, async (req, res) => {
+  try {
+    const userID = req.body.userID;
+    const cities = await Citymodel.find({ user: userID });
+    return res.status(200).json(cities);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({ error: error.message });
+  }
+});
 
 app.listen(PORT, async () => {
   try {
